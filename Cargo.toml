@@ -1,9 +1,9 @@
 [package]
-name = "ole_rust_timer"
+name = "simple_rust_timer"
 version = "0.1.0"
 authors = ["Ole"]
 edition = "2018"
 
 [dependencies]
 notify-rust = "3.6.2"
-# chrono = "*"
+chrono = "*"

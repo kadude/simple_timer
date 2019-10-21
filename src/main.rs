@@ -4,6 +4,7 @@ use std::io;
 use std::io::prelude::*;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
+use chrono::{Local, NaiveTime};
 
 fn time_left(time: u64, start: &Instant) -> u64 {
     time - start.elapsed().as_secs()
@@ -23,22 +24,36 @@ fn main() {
         return;
     }
 
-    let time: u64 = args
-        .iter()
-        .skip(1)
-        .fold(String::new(), |acc, curr| acc + " " + curr)
-        .split_whitespace()
-        .fold(0, |sum, value| {
-            let num_value = match value {
-                x if x.contains('h') => {
-                    x.replace("h", "").trim().parse::<u64>().unwrap() * (60 * 60)
-                }
-                x if x.contains('m') => x.replace("m", "").trim().parse::<u64>().unwrap() * 60,
-                x if x.contains('s') => x.replace("s", "").trim().parse::<u64>().unwrap(),
-                x => x.trim().parse::<u64>().expect("Error: not an integer"),
-            };
-            sum + num_value
-        });
+    let time: u64 = if args.iter().count() == 2 && args[1].contains(':') {
+        let time_only = NaiveTime::parse_from_str(&args[1][..], "%H:%M:%S")
+            .or_else(|_| NaiveTime::parse_from_str(&args[1][..], "%H:%M"))
+            .ok()
+            .unwrap();
+        let secs = time_only
+            .signed_duration_since(Local::now().time())
+            .num_seconds();
+        if secs < 0 {
+            i64::abs((24 * 60 * 60) + secs) as u64
+        } else {
+            i64::abs(secs) as u64
+        }
+    } else {
+        args.iter()
+            .skip(1)
+            .fold(String::new(), |acc, curr| acc + " " + curr)
+            .split_whitespace()
+            .fold(0, |sum, value| {
+                let num_value = match value {
+                    x if x.contains('h') => {
+                        x.replace("h", "").trim().parse::<u64>().unwrap() * (60 * 60)
+                    }
+                    x if x.contains('m') => x.replace("m", "").trim().parse::<u64>().unwrap() * 60,
+                    x if x.contains('s') => x.replace("s", "").trim().parse::<u64>().unwrap(),
+                    x => x.trim().parse::<u64>().expect("Error: not an integer"),
+                };
+                sum + num_value
+            })
+    };
 
     let start = Instant::now();
 

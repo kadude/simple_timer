@@ -3,8 +3,8 @@
 .DEFAULT_GOAL := install
 
 BIN = ~/olescripts
-INSTALL_TARGET = ${BIN}/oleTimer
-TARGET = target/release/ole_rust_timer
+INSTALL_TARGET = ${BIN}/simpleTimer
+TARGET = target/release/simple_rust_timer
 
 install: $(TARGET) ${INSTALL_TARGET}
 
