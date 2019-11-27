@@ -1,10 +1,66 @@
+use chrono::{Local, NaiveTime};
+use crossterm::{
+    cursor::MoveTo,
+    execute,
+    terminal::{Clear, ClearType},
+    Output, Result,
+};
 use notify_rust::{Notification, Timeout};
 use std::env;
 use std::io;
-use std::io::prelude::*;
+use std::io::{stdout, Write};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-use chrono::{Local, NaiveTime};
+
+fn create_ascii(number: char) -> Vec<&'static str> {
+    match number {
+        '1' => vec![" __ ", "/_ |", " | |", " | |", " | |", " |_|"],
+        '2' => vec![" ___  ", "|__ \\ ", "   ) |", "  / / ", " / /_ ", "|____|"],
+        '3' => vec![
+            " ____  ", "|___ \\ ", "  __) |", " |__ < ", " ___) |", "|____/ ",
+        ],
+        '4' => vec![
+            " _  _   ", "| || |  ", "| || |_ ", "|__   _|", "   | |  ", "   |_|  ",
+        ],
+        '5' => vec![
+            " _____ ", "| ____|", "| |__  ", "|___ \\ ", " ___) |", "|____/ ",
+        ],
+        '6' => vec![
+            "   __  ", "  / /  ", " / /_  ", "| '_ \\ ", "| (_) |", " \\___/ ",
+        ],
+        '7' => vec![
+            " ______ ", "|____  |", "    / / ", "   / /  ", "  / /   ", " /_/    ",
+        ],
+        '8' => vec![
+            "  ___  ", " / _ \\ ", "| (_) |", " > _ < ", "| (_) |", " \\___/ ",
+        ],
+        '9' => vec![
+            "  ___  ", " / _ \\ ", "| (_) |", " \\__, |", "   / / ", "  /_/  ",
+        ],
+        '0' => vec![
+            "  ___  ", " / _ \\ ", "| | | |", "| | | |", "| |_| |", " \\___/ ",
+        ],
+        ':' => vec!["   ", " _ ", "(_)", "   ", " _ ", "(_)"],
+        _ => vec![""],
+    }
+}
+
+fn print_ascii(ascii: Vec<&str>, start: u16) -> Result<usize> {
+    let mut index = 0;
+    for i in &ascii {
+        execute!(stdout(), MoveTo(start, index), Output(i.to_string()))?;
+        index += 1;
+    }
+    Ok(ascii[0].chars().count())
+}
+
+fn print_alle_ascii(verdi: String) {
+    let mut start = 0;
+    execute!(stdout(), MoveTo(0, 0), Clear(ClearType::FromCursorDown)).ok();
+    for x in verdi.chars() {
+        start += print_ascii(create_ascii(x), start as u16).unwrap();
+    }
+}
 
 fn time_left(time: u64, start: &Instant) -> u64 {
     time - start.elapsed().as_secs()
@@ -57,13 +113,18 @@ fn main() {
 
     let start = Instant::now();
 
+    execute!(stdout(), Clear(ClearType::All)).ok();
     while (time_left(time, &start)) != 0 {
-        print!("\r");
-        print!("{} ", format_duration(time_left(time, &start)));
+        // print!("\r");
+        // print!("{} ", format_duration(time_left(time, &start)));
+        print_alle_ascii(format_duration(time_left(time, &start)));
         io::stdout().flush().expect("Could not flush stdout");
+        println!();
         sleep(Duration::from_millis(500));
     }
-    print!("\r");
+    print_alle_ascii(format_duration(time_left(time, &start)));
+    println!();
+    // print!("\r");
     print!("Done!");
 
     Notification::new()
