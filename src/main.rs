@@ -3,14 +3,17 @@ use crossterm::{
     cursor::MoveTo,
     execute,
     terminal::{Clear, ClearType},
-    Output, Result,
+    style::{Print},
+    Result,
 };
-use notify_rust::{Notification, Timeout};
 use std::env;
 use std::io;
 use std::io::{stdout, Write};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
+
+#[cfg(target_os = "linux")]
+use notify_rust::{Notification, Timeout};
 
 fn create_ascii(number: char) -> Vec<&'static str> {
     match number {
@@ -48,7 +51,7 @@ fn create_ascii(number: char) -> Vec<&'static str> {
 fn print_ascii(ascii: Vec<&str>, start: u16) -> Result<usize> {
     let mut index = 0;
     for i in &ascii {
-        execute!(stdout(), MoveTo(start, index), Output(i.to_string()))?;
+        execute!(stdout(), MoveTo(start, index), Print(i.to_string()))?;
         index += 1;
     }
     Ok(ascii[0].chars().count())
@@ -72,6 +75,20 @@ fn format_duration(remaining_seconds: u64) -> String {
     let seconds: u64 = (remaining_seconds) % 60;
     format!("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds)
 }
+
+#[cfg(target_os = "linux")]
+fn notify() {
+    Notification::new()
+        .summary("Time's up!")
+        .body("Time to change position!")
+        .icon("clock")
+        .timeout(Timeout::Milliseconds(2000))
+        .show()
+        .unwrap();
+}
+
+#[cfg(not(target_os = "linux"))]
+fn notify() {/* NOOP */}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -115,8 +132,6 @@ fn main() {
 
     execute!(stdout(), Clear(ClearType::All)).ok();
     while (time_left(time, &start)) != 0 {
-        // print!("\r");
-        // print!("{} ", format_duration(time_left(time, &start)));
         print_alle_ascii(format_duration(time_left(time, &start)));
         io::stdout().flush().expect("Could not flush stdout");
         println!();
@@ -124,14 +139,7 @@ fn main() {
     }
     print_alle_ascii(format_duration(time_left(time, &start)));
     println!();
-    // print!("\r");
     print!("Done!");
 
-    Notification::new()
-        .summary("Time's up!")
-        .body("Time to change position!")
-        .icon("clock")
-        .timeout(Timeout::Milliseconds(2000))
-        .show()
-        .unwrap();
+    notify();
 }
