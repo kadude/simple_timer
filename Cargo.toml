@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 chrono = "0.4.10"
-crossterm = "0.14.1"
+crossterm = "0.16.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 notify-rust = "3.6.3"
